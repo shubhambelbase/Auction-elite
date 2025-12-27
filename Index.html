@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Auction Elite | Ultimate</title>
+    
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --bg-body: #0f172a;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #1e293b, #0f172a);
+            --glass: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --danger: #ef4444;
+            --accent: #10b981;
+            --gold: #fbbf24;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --radius: 20px;
+            --shadow-card: 0 10px 30px rgba(0,0,0,0.2);
+            --input-bg: rgba(0,0,0,0.3);
+            --header-bg: rgba(30, 41, 59, 0.7);
+        }
+
+        [data-theme="light"] {
+            --bg-body: #f8fafc;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #e2e8f0, #f1f5f9);
+            --glass: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(0, 0, 0, 0.06);
+            --primary: #4f46e5;
+            --primary-glow: rgba(79, 70, 229, 0.15);
+            --danger: #dc2626;
+            --accent: #059669;
+            --gold: #d97706;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --radius: 20px;
+            --shadow-card: 0 10px 40px rgba(0,0,0,0.05);
+            --input-bg: rgba(255, 255, 255, 0.6);
+            --header-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        * { box-sizing: border-box; transition: background 0.5s ease, color 0.5s ease, border-color 0.5s ease, transform 0.2s ease; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body { 
+            background: var(--bg-body); 
+            background-image: var(--bg-gradient);
+            color: var(--text-main); 
+            margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden;
+        }
+
+        body::before {
+            content: ''; position: fixed; top: -20%; left: -20%; width: 60%; height: 60%;
+            background: radial-gradient(circle, var(--primary-glow), transparent 70%);
+            opacity: 0.4; z-index: -1; pointer-events: none; transition: opacity 0.5s ease;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 30px 20px; }
+        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+
+        /* --- HEADER & CONTROLS --- */
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 25px; 
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 100px;
+            margin-bottom: 40px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+        }
+        .logo { 
+            font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.2rem; 
+            text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-main);
+        }
+        
+        .header-controls { display: flex; align-items: center; gap: 10px; }
+
+        .icon-btn {
+            background: transparent; border: none; cursor: pointer; padding: 8px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: var(--text-main); opacity: 0.7;
+        }
+        .icon-btn:hover { opacity: 1; background: var(--glass-border); }
+        .icon-btn svg { width: 20px; height: 20px; }
+
+        .status-pill { 
+            font-size: 0.75rem; font-weight: 700; padding: 6px 14px; 
+            border-radius: 100px; background: var(--input-bg); 
+            border: 1px solid var(--glass-border); 
+            color: var(--accent); letter-spacing: 0.5px;
+            margin-right: 10px; cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .status-pill:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+        /* --- COMPONENTS --- */
+        .card { 
+            background: var(--glass); border: 1px solid var(--glass-border); 
+            border-radius: var(--radius); padding: 25px; 
+            box-shadow: var(--shadow-card); 
+            backdrop-filter: blur(10px);
+            position: relative; overflow: hidden;
+        }
+
+        .setup-card { max-width: 420px; margin: 60px auto; text-align: center; padding: 40px; border-radius: 30px; }
+        
+        h2, h3 { color: var(--text-main); margin-bottom: 20px; font-family: 'Outfit', sans-serif; }
+
+        input { 
+            width: 100%; padding: 18px; border-radius: 14px; 
+            background: var(--input-bg); border: 1px solid var(--glass-border); 
+            margin-bottom: 16px; font-size: 1rem; color: var(--text-main); outline: none; 
+            font-weight: 500;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
+
+        .app-stack { display: flex; flex-direction: column; gap: 30px; animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Dashboard & Stats */
+        .dashboard-layout { display: flex; gap: 30px; align-items: flex-start; }
+        .lb-section { flex: 1; }
+        .stats-section { 
+            min-width: 140px; text-align: center; 
+            border-left: 1px solid var(--glass-border); 
+            padding-left: 30px; margin-left: 10px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        
+        /* Items */
+        #host-ui { background: var(--primary-glow); border: 1px dashed var(--primary); }
+        .host-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+        .item-card { margin-bottom: 24px; border: 1px solid var(--glass-border); background: linear-gradient(160deg, var(--glass), transparent); }
+        .item-card.winner-state { border-color: var(--gold); background: linear-gradient(160deg, rgba(251, 191, 36, 0.1), transparent); box-shadow: 0 0 40px rgba(251, 191, 36, 0.1); }
+
+        .price-tag { 
+            font-family: 'Outfit', sans-serif; font-size: 5rem; font-weight: 800; letter-spacing: -3px; 
+            margin: 20px 0; line-height: 1; 
+            background: linear-gradient(180deg, var(--text-main), var(--text-muted));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .update-anim { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pop { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.02); filter: brightness(1.2); } 100% { transform: scale(1); } }
+
+        /* Buttons */
+        .btn { padding: 18px 24px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; box-shadow: none !important; background: var(--glass-border); color: var(--text-muted); }
+        
+        .btn-black { background: var(--primary); color: white; width: 100%; box-shadow: 0 10px 20px -5px var(--primary-glow); }
+        .btn-black:hover { background: var(--primary); filter: brightness(1.1); box-shadow: 0 15px 30px -5px var(--primary-glow); }
+
+        .btn-danger { background: var(--danger); color: white; padding: 10px 20px; font-size: 0.8rem; box-shadow: 0 5px 15px -5px var(--danger); }
+        .btn-danger:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        .btn-bid { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--glass-border); font-size: 0.9rem; }
+        .btn-bid:hover:not(:disabled) { background: var(--text-main); color: var(--bg-body); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        /* Grid Layouts */
+        .bid-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 30px; }
+
+        .winner-banner { margin-top: 20px; padding: 20px; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 14px; color: var(--gold); text-align: center; font-weight: 800; letter-spacing: 1px; }
+        
+        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--glass-border); font-size: 0.9rem; color: var(--text-muted); }
+        .row:first-child { color: var(--text-main); font-weight: 700; border-top: 1px solid var(--glass-border); margin-top: 10px;}
+        .badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; box-shadow: 0 2px 10px var(--primary-glow); }
+
+        /* --- EXTRAS --- */
+        [data-theme="dark"] .sun-icon { display: block; }
+        [data-theme="dark"] .moon-icon { display: none; }
+        [data-theme="light"] .sun-icon { display: none; }
+        [data-theme="light"] .moon-icon { display: block; }
+        
+        .mute-off { display: none; }
+        .muted .mute-on { display: none; }
+        .muted .mute-off { display: block; }
+
+        #qr-container { margin-top: 20px; display: flex; justify-content: center; padding: 20px; background: white; border-radius: 12px; }
+        
+        #toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { 
+            background: var(--glass); backdrop-filter: blur(12px); border: 1px solid var(--glass-border);
+            color: var(--text-main); padding: 12px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: translateX(100px); opacity: 0;
+            animation: slideIn 0.3s forwards; pointer-events: auto; display: flex; align-items: center; gap: 10px;
+        }
+        @keyframes slideIn { to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
+
+        /* --- MOBILE OPTIMIZATION --- */
+        @media (max-width: 600px) {
+            .container { padding: 20px 15px; }
+            .card { padding: 20px; }
+            .dashboard-layout { flex-direction: column; }
+            .stats-section { 
+                width: 100%; border-left: none; border-top: 1px solid var(--glass-border); 
+                padding-left: 0; padding-top: 20px; margin-left: 0; margin-top: 10px;
+                flex-direction: row; justify-content: space-between; align-items: center;
+            }
+            .bid-row { grid-template-columns: repeat(3, 1fr); }
+            .price-tag { font-size: 4rem; }
+            header { padding: 12px 15px; margin-bottom: 25px; }
+            .setup-card { margin-top: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div style="display: flex; align-items: center;">
+            <div class="logo">⚡ Auction Elite</div>
+        </div>
+        
+        <div class="header-controls">
+            <div id="room-display" class="status-pill" onclick="copyRoomCode()" title="Click to Copy Code">
+                OFFLINE
+            </div>
+            
+            <button class="icon-btn" id="sound-btn" onclick="toggleSound()" aria-label="Toggle Sound">
+                <svg class="mute-on" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                <svg class="mute-off" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z m17.364 1.364l-9.9-9.9"></path></svg>
+            </button>
+
+            <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle Theme">
+                <svg class="sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg class="moon-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <div id="setup" class="setup-card card">
+        <h2 style="font-size: 2rem; margin-top: 0;">Identity</h2>
+        <input type="text" id="user-name" placeholder="Enter your alias">
+        <input type="text" id="room-input" placeholder="Room Code (Join Only)">
+        <div style="height: 20px;"></div>
+        <button class="btn btn-black" onclick="init(true)" style="margin-bottom: 12px;">Create Host</button>
+        <button class="btn btn-bid" style="width: 100%;" onclick="init(false)">Join Host</button>
+    </div>
+
+    <div id="app" class="app-stack hidden">
+        
+        <div id="host-ui" class="card hidden">
+            <h3 style="margin-top:0; color: var(--primary);">+ New Lot</h3>
+            <input type="text" id="item-title" placeholder="Item Description">
+            <div class="host-grid">
+                <input type="number" id="item-start" placeholder="Start Amount">
+                <input type="number" id="item-limit" placeholder="Buyout Amount">
+                <input type="number" id="item-time" placeholder="Mins">
+            </div>
+            <button class="btn btn-black" onclick="createItem()" style="margin-top: 12px;">Initialize Auction</button>
+            
+            <div style="margin-top: 20px; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 20px;">
+                <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 10px;">Scan to Join</div>
+                <div id="qr-container"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="dashboard-layout">
+                <div class="lb-section">
+                    <h3 style="margin-top:0; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);">Live Rankings</h3>
+                    <div id="leaderboard">
+                        <div style="color:var(--text-muted); font-style:italic; padding:10px 0;">No bids yet...</div>
+                    </div>
+                </div>
+                <div class="stats-section">
+                    <div id="peer-count" style="font-size: 2.5rem; font-weight: 800; color: var(--text-main); line-height: 1;">1</div>
+                    <div style="font-size: 0.6rem; font-weight: 800; color: var(--accent); letter-spacing: 1px; margin-top: 5px;">ACTIVE NODES</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="item-list">
+            <div class="card" style="text-align: center; color: var(--text-muted); padding: 60px; border-style: dashed;">
+                <div style="font-size: 2rem; opacity: 0.5; margin-bottom: 10px;">⏳</div>
+                Waiting for host to initialize...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    // --- SETTINGS & UTILS ---
+    let isMuted = false;
+    
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+    }
+    
+    function toggleSound() {
+        isMuted = !isMuted;
+        document.getElementById('sound-btn').classList.toggle('muted', isMuted);
+    }
+
+    function showToast(msg, icon="🔔") {
+        const c = document.getElementById('toast-container');
+        const d = document.createElement('div');
+        d.className = 'toast';
+        d.innerHTML = `<span style="font-size:1.2rem">${icon}</span> <span>${msg}</span>`;
+        c.appendChild(d);
+        setTimeout(() => { d.style.animation = "fadeOut 0.5s forwards"; setTimeout(()=>d.remove(), 500); }, 3000);
+    }
+
+    function copyRoomCode() {
+        const code = document.getElementById('room-display').innerText.replace('CODE: ', '');
+        if(code === 'OFFLINE') return;
+        // Copy full URL logic if possible, else just code
+        navigator.clipboard.writeText(window.location.href.split('?')[0] + '?room=' + code);
+        showToast("Join Link Copied!", "🔗");
+    }
+
+    // Init Theme & Check URL
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+    
+    // Auto-Join from URL
+    window.addEventListener('load', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomParam = urlParams.get('room');
+        if(roomParam) {
+            document.getElementById('room-input').value = roomParam;
+            // Optional: You can auto-trigger join if you want, but user might want to set name first
+            // init(false); 
+        }
+    });
+    // -------------------
+
+    // --- CORE LOGIC ---
+    let peer, conn, connections = [], isHost = false, myName = "Guest";
+    let auctionData = { items: [], participants: {} };
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSfx(type) {
+        if(isMuted) return;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(type === 'bid' ? 600 : 400, audioCtx.currentTime);
+        if(type === 'win') osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.type = 'sine';
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function init(hostMode) {
+        isHost = hostMode;
+        myName = document.getElementById('user-name').value || "Guest-" + Math.floor(Math.random()*99);
+        const roomId = isHost ? Math.random().toString(36).substring(2, 7).toUpperCase() : document.getElementById('room-input').value.toUpperCase();
+        if(!isHost && !roomId) return alert("Enter Room Code");
+        
+        // UI Transition
+        const setupDiv = document.getElementById('setup');
+        setupDiv.style.opacity = '0';
+        setupDiv.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            setupDiv.classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        }, 300);
+
+        document.getElementById('room-display').innerHTML = `<span style="opacity:0.6">CODE:</span> ${roomId}`;
+        document.getElementById('room-display').style.borderColor = 'var(--accent)';
+        document.getElementById('room-display').style.color = 'var(--accent)';
+        
+        // Peer Init
+        peer = new Peer(isHost ? roomId : null);
+        
+        peer.on('open', () => { 
+            if(!isHost) {
+                setupConnection(peer.connect(roomId));
+                showToast(`Joined Room: ${roomId}`, "🚀");
+            } else {
+                // Generate QR Code with Full URL
+                const joinUrl = window.location.href.split('?')[0] + '?room=' + roomId;
+                new QRCode(document.getElementById("qr-container"), {
+                    text: joinUrl,
+                    width: 128, height: 128,
+                    colorDark : "#000000", colorLight : "#ffffff"
+                });
+                showToast("Studio Created!", "✨");
+            }
+        });
+        
+        peer.on('connection', (c) => { 
+            connections.push(c); 
+            setupConnection(c); 
+            showToast("New Peer Connected", "👋");
+        });
+        
+        if(isHost) document.getElementById('host-ui').classList.remove('hidden');
+    }
+
+    function setupConnection(c) {
+        conn = c;
+        if(isHost) setTimeout(broadcast, 500);
+        c.on('data', (data) => {
+            if(data.type === 'SYNC') { auctionData = data.data; render(true); }
+            if(data.type === 'BID' && isHost) validateBid(data);
+            if(data.type === 'SFX') playSfx(data.sfx);
+            if(data.type === 'TOAST') showToast(data.msg, data.icon);
+        });
+    }
+
+    function createItem() {
+        const item = {
+            id: Date.now(), title: document.getElementById('item-title').value || "Mystery Lot",
+            current: parseFloat(document.getElementById('item-start').value) || 0,
+            limit: parseFloat(document.getElementById('item-limit').value) || 1000,
+            endTime: Date.now() + (parseInt(document.getElementById('item-time').value || 5) * 60000),
+            lastBidder: "No Bids", winner: null
+        };
+        auctionData.items.unshift(item); broadcast(); render();
+        showToast("New Auction Started", "🔥");
+        document.getElementById('item-title').value = '';
+        document.getElementById('item-start').value = '';
+    }
+
+    // NEW: Function to manually end auction
+    function endAuction(itemId) {
+        if(!isHost) return;
+        const item = auctionData.items.find(i => i.id === itemId);
+        if(!item || item.winner) return;
+
+        // Force end time
+        item.endTime = Date.now() - 1000;
+        
+        // Determine winner
+        if(item.lastBidder !== "No Bids") {
+            item.winner = item.lastBidder;
+            triggerConfetti();
+            showToast(`${item.winner} Wins!`, '🏆');
+            broadcast('win'); // Send win SFX/Confetti trigger
+        } else {
+            showToast("Auction Ended (No Bids)", '🛑');
+            broadcast();
+        }
+        render();
+    }
+
+    function submitBid(itemId, val) {
+        const item = auctionData.items.find(i => i.id === itemId);
+        if(Date.now() > item.endTime) return;
+        const bid = { type: 'BID', itemId, amount: item.current + val, name: myName };
+        if(isHost) validateBid(bid); else conn.send(bid);
+    }
+
+    function validateBid(bid) {
+        const item = auctionData.items.find(i => i.id === bid.itemId);
+        if(!item || item.winner || Date.now() > item.endTime) return;
+        if(bid.amount > item.current && bid.amount <= item.limit) {
+            item.current = bid.amount; item.lastBidder = bid.name;
+            auctionData.participants[bid.name] = (auctionData.participants[bid.name] || 0) + 1;
+            
+            let sfx = 'bid';
+            if(item.current >= item.limit) {
+                sfx = 'win';
+                item.winner = bid.name;
+                triggerConfetti();
+                connections.forEach(c => c.send({type:'TOAST', msg:`${bid.name} Won ${item.title}!`, icon:'🏆'}));
+                showToast(`${bid.name} Won ${item.title}!`, '🏆');
+            }
+            
+            broadcast(sfx); render(true); playSfx(sfx);
+            if(sfx === 'win') setTimeout(() => broadcast('win'), 100); 
+        }
+    }
+
+    function broadcast(sfx = null) {
+        if(!isHost) return;
+        connections.forEach(c => {
+            c.send({ type: 'SYNC', data: auctionData });
+            if(sfx) c.send({ type: 'SFX', sfx });
+        });
+        if(sfx === 'win') triggerConfetti();
+    }
+
+    function triggerConfetti() {
+        const duration = 3000;
+        const end = Date.now() + duration;
+        (function frame() {
+            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#6366f1', '#fbbf24'] });
+            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#10b981', '#fbbf24'] });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        }());
+    }
+
+    const originalPlaySfx = playSfx;
+    playSfx = function(type) {
+        originalPlaySfx(type);
+        if(type === 'win') triggerConfetti();
+    }
+
+    function render(animate = false) {
+        document.getElementById('peer-count').innerText = connections.length + 1;
+        const list = document.getElementById('item-list');
+        const lb = document.getElementById('leaderboard');
+        
+        // LB
+        const participants = Object.entries(auctionData.participants).sort((a,b) => b[1]-a[1]);
+        if(participants.length > 0) {
+            lb.innerHTML = participants.map(([n, b], i) => `
+                <div class="row">
+                    <span style="display:flex; align-items:center; gap:10px;">
+                        <span style="opacity:0.5; width:20px;">#${i+1}</span> ${n}
+                    </span>
+                    <span class="badge">${b} BIDS</span>
+                </div>
+            `).join('');
+        }
+
+        // Items
+        if(auctionData.items.length === 0) return;
+        list.innerHTML = auctionData.items.map(item => {
+            const isFinished = Date.now() > item.endTime || item.winner;
+            if(isFinished && !item.winner && item.lastBidder !== "No Bids") item.winner = item.lastBidder;
+            
+            return `
+                <div class="card item-card ${item.winner ? 'winner-state' : ''}">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <h3 style="margin:0; font-size:1.5rem;">${item.title}</h3>
+                            <p style="margin:5px 0 0 0; font-size:0.85rem; font-weight:600; color:var(--text-muted); letter-spacing:1px;">
+                                ${item.winner ? '🏆 LOT CLOSED' : '⚡ LIVE BIDDING'} | LEADER: <span style="color:var(--text-main)">${item.lastBidder}</span>
+                            </p>
+                        </div>
+                        
+                        <div style="display:flex; gap:10px; align-items:center;">
+                             ${isHost && !isFinished ? `<button class="btn btn-danger" onclick="endAuction(${item.id})">End Now</button>` : ''}
+                            
+                            <div id="t-${item.id}" class="status-pill" style="border-color:${isFinished ? 'var(--text-muted)' : 'var(--primary)'}; background: ${isFinished ? 'transparent' : 'var(--primary)'}; color:${isFinished ? 'var(--text-muted)' : 'white'}; margin-right:0; cursor:default;">
+                                ${isFinished ? 'CLOSED' : '00:00'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="price-tag ${animate ? 'update-anim' : ''}">${item.current.toLocaleString()}</div>
+                    
+                    ${!isFinished ? 
+                        `<div class="bid-row">
+                            ${[5, 10, 50, 100, 500].map(v => {
+                                const isOverLimit = (item.current + v) > item.limit;
+                                return `<button class="btn btn-bid" ${isOverLimit ? 'disabled' : ''} onclick="submitBid(${item.id}, ${v})">+${v}</button>`
+                            }).join('')}
+                        </div>` 
+                    : 
+                        `<div class="winner-banner">
+                            <div style="font-size:1.5rem">SOLD TO ${item.winner}</div>
+                            <div style="font-size:0.8rem; opacity:0.8">FINAL PRICE: ${item.current.toLocaleString()}</div>
+                        </div>`
+                    }
+                </div>`;
+        }).join('');
+    }
+
+    function clock() {
+        auctionData.items.forEach(item => {
+            const el = document.getElementById(`t-${item.id}`);
+            if(!el || item.winner) return;
+            const diff = item.endTime - Date.now();
+            if(diff <= 0) { render(); } else {
+                const m = Math.floor(diff/60000), s = Math.floor((diff%60000)/1000);
+                el.innerText = `${m}:${s.toString().padStart(2,'0')}`;
+            }
+        });
+        requestAnimationFrame(clock);
+    }
+    requestAnimationFrame(clock);
+</script>
+</body>
+</html>
