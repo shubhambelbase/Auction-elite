@@ -109,6 +109,6 @@ Got an idea to make the economy even more chaotic?
 ---
 
 <div align="center">
-  <p>Vibe coded with ⚡ by <a href="https://github.com/shubhambelbase">Shubham Belbase</a></p>
+  <p>Vibe coded with ❤️ by <a href="https://github.com/shubhambelbase">Shubham Belbase</a></p>
 </div>
 
